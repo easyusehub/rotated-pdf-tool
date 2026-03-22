@@ -7,7 +7,7 @@
 <style>
 body,html{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#f0f2f5;display:flex;justify-content:center;}
 .container{width:95%;max-width:1100px;padding:20px;background:#fff;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.1);}
-.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
 .upload{padding:12px 20px;border:3px dashed #9333ea;border-radius:15px;color:#9333ea;cursor:pointer;text-align:center;margin-top:5px;font-weight:600;}
 #pdf-pages{display:flex;flex-wrap:wrap;gap:15px;margin-top:20px;}
 .page-card{position:relative;width:200px;height:280px;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;justify-content:center;align-items:center;overflow:hidden;cursor:pointer;transition:transform 0.2s;}
@@ -19,53 +19,62 @@ body,html{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#f0f2f
 .bottom-buttons a{padding:10px 16px;background:#1e293b;color:#fff;border-radius:8px;text-decoration:none;}
 .quick-buttons{margin:10px 0;}
 .quick-buttons button{margin-right:5px;}
-.instruction{margin-top:15px;color:#475569;font-size:0.9rem;}
+.instruction{margin-top:10px;color:#475569;font-size:0.9rem;}
 .ad{margin:15px 0;border:2px dashed #ccc;padding:12px;border-radius:10px;color:#999;text-align:center;}
 </style>
 </head>
 <body>
 <div class="container">
-<div class="header">
-<h2>🔄 Rotate PDF</h2>
-    <p class="instruction">
-How to use: First, upload your PDF file, then select the pages you want to rotate. Choose a rotation angle from the dropdown or use the quick buttons. Click the "Rotate" button to rotate the selected pages. After rotation, download your PDF using the "Download" button.
-    </p>
-<div class="ad">Top Ad Placeholder</div>
+  <!-- Header + Top Ad -->
+  <div class="header">
+    <h2>🔄 Rotate PDF</h2>
+    <div class="ad">Top Ad Placeholder</div>
+  </div>
+
+  <!-- Instruction -->
+  <p class="instruction">
+    How to use: First, upload your PDF file, then select the pages you want to rotate. Choose a rotation angle from the dropdown or use the quick buttons. Click the "Rotate" button to rotate the selected pages. After rotation, download your PDF using the "Download" button.
+  </p>
+
+  <!-- Upload PDF -->
+  <div class="upload" onclick="fileInput.click()">📁 Upload PDF</div>
+  <input type="file" id="fileInput" hidden accept="application/pdf">
+
+  <!-- Middle Ad -->
+  <div class="ad">Middle Ad Placeholder</div>
+
+  <!-- PDF Page Thumbnails -->
+  <div id="pdf-pages"></div>
+
+  <!-- Quick Rotate Buttons -->
+  <div class="quick-buttons">
+    <label>Quick Rotate:</label>
+    <button onclick="rotateSelected(90)">90°</button>
+    <button onclick="rotateSelected(180)">180°</button>
+    <button onclick="rotateSelected(270)">270°</button>
+    <button onclick="rotateAll(90)">All Pages 90°</button>
+  </div>
+
+  <!-- Dropdown + Rotate Selected + Download -->
+  <div>
+    <label>Select rotation angle:</label>
+    <select id="rotateAngle">
+      <option value="90">90°</option>
+      <option value="180">180°</option>
+      <option value="270">270°</option>
+    </select>
+    <button class="button" onclick="rotateSelected()">Rotate Selected</button>
+    <button class="button" id="download" style="display:none;">📥 Download</button>
+  </div>
+
+  <!-- Bottom Buttons -->
+  <div class="bottom-buttons">
+    <a href="#">📂 All PDF Tools</a>
+    <a href="#">🏠 Home</a>
+  </div>
 </div>
 
-<div class="upload" onclick="fileInput.click()">📁 Upload PDF</div>
-<input type="file" id="fileInput" hidden accept="application/pdf">
-
-<div class="ad">Middle Ad Placeholder</div>
-
-<div id="pdf-pages"></div>
-
-<div class="quick-buttons">
-<label>Quick Rotate:</label>
-<button onclick="rotateSelected(90)">90°</button>
-<button onclick="rotateSelected(180)">180°</button>
-<button onclick="rotateSelected(270)">270°</button>
-<button onclick="rotateAll(90)">All Pages 90°</button>
-</div>
-
-<div>
-<label>Select rotation angle:</label>
-<select id="rotateAngle">
-<option value="90">90°</option>
-<option value="180">180°</option>
-<option value="270">270°</option>
-</select>
-<button class="button" onclick="rotateSelected()">Rotate Selected</button>
-<button class="button" id="download" style="display:none;">📥 Download</button>
-</div>
-
-
-<div class="bottom-buttons">
-<a href="#">📂 All PDF Tools</a>
-<a href="#">🏠 Home</a>
-</div>
-</div>
-
+<!-- PDF.js + PDF-lib -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 
@@ -76,72 +85,72 @@ let pdfPagesContainer=document.getElementById('pdf-pages');
 let rotationMap={};
 
 fileInput.onchange = async e=>{
-    const file=e.target.files[0];
-    if(!file) return;
-    const buf=await file.arrayBuffer();
-    pdfDoc=await pdfjsLib.getDocument({data:buf}).promise;
-    pdfPagesContainer.innerHTML='';
-    rotationMap={};
+  const file=e.target.files[0];
+  if(!file) return;
+  const buf=await file.arrayBuffer();
+  pdfDoc=await pdfjsLib.getDocument({data:buf}).promise;
+  pdfPagesContainer.innerHTML='';
+  rotationMap={};
 
-    for(let i=0;i<pdfDoc.numPages;i++){
-        const page=await pdfDoc.getPage(i+1);
-        const viewport=page.getViewport({scale:0.25});
-        const canvas=document.createElement('canvas');
-        canvas.width=viewport.width;
-        canvas.height=viewport.height;
-        await page.render({canvasContext:canvas.getContext('2d'), viewport}).promise;
+  for(let i=0;i<pdfDoc.numPages;i++){
+    const page=await pdfDoc.getPage(i+1);
+    const viewport=page.getViewport({scale:0.25});
+    const canvas=document.createElement('canvas');
+    canvas.width=viewport.width;
+    canvas.height=viewport.height;
+    await page.render({canvasContext:canvas.getContext('2d'), viewport}).promise;
 
-        const box=document.createElement('div');
-        box.className='page-card';
-        box.dataset.page=i;
-        rotationMap[i]=0;
+    const box=document.createElement('div');
+    box.className='page-card';
+    box.dataset.page=i;
+    rotationMap[i]=0;
 
-        const num=document.createElement('div');
-        num.className='page-num';
-        num.textContent=i+1;
+    const num=document.createElement('div');
+    num.className='page-num';
+    num.textContent=i+1;
 
-        box.appendChild(canvas);
-        box.appendChild(num);
-        box.onclick=()=>{box.classList.toggle('selected');};
+    box.appendChild(canvas);
+    box.appendChild(num);
+    box.onclick=()=>{box.classList.toggle('selected');};
 
-        pdfPagesContainer.appendChild(box);
-    }
+    pdfPagesContainer.appendChild(box);
+  }
 };
 
 async function rotateSelected(angle){
-    await rotatePages(getSelectedBoxes(), angle);
+  await rotatePages(getSelectedBoxes(), angle);
 }
 async function rotateAll(angle){
-    const allBoxes=[...document.querySelectorAll('.page-card')];
-    await rotatePages(allBoxes, angle);
+  const allBoxes=[...document.querySelectorAll('.page-card')];
+  await rotatePages(allBoxes, angle);
 }
 
 async function rotatePages(boxes, angle){
-    if(!pdfDoc){alert('Upload PDF first'); return;}
-    if(boxes.length===0){alert('Select at least one page!'); return;}
-    const file=fileInput.files[0];
-    const buf=await file.arrayBuffer();
-    const pdf=await PDFLib.PDFDocument.load(buf);
+  if(!pdfDoc){alert('Upload PDF first'); return;}
+  if(boxes.length===0){alert('Select at least one page!'); return;}
+  const file=fileInput.files[0];
+  const buf=await file.arrayBuffer();
+  const pdf=await PDFLib.PDFDocument.load(buf);
 
-    const chosenAngle = angle || parseInt(document.getElementById('rotateAngle').value);
+  const chosenAngle = angle || parseInt(document.getElementById('rotateAngle').value);
 
-    for(let box of boxes){
-        const pageIndex=parseInt(box.dataset.page);
-        rotationMap[pageIndex]=(rotationMap[pageIndex]+chosenAngle)%360;
-        pdf.getPages()[pageIndex].setRotation(PDFLib.degrees(rotationMap[pageIndex]));
-        box.style.transform=`rotate(${rotationMap[pageIndex]}deg)`;
-    }
+  for(let box of boxes){
+    const pageIndex=parseInt(box.dataset.page);
+    rotationMap[pageIndex]=(rotationMap[pageIndex]+chosenAngle)%360;
+    pdf.getPages()[pageIndex].setRotation(PDFLib.degrees(rotationMap[pageIndex]));
+    box.style.transform=`rotate(${rotationMap[pageIndex]}deg)`;
+  }
 
-    const bytes=await pdf.save();
-    const blob=new Blob([bytes],{type:'application/pdf'});
-    const url=URL.createObjectURL(blob);
-    const download=document.getElementById('download');
-    download.style.display='inline-block';
-    download.onclick=()=>{let a=document.createElement('a'); a.href=url; a.download='rotated.pdf'; a.click();};
+  const bytes=await pdf.save();
+  const blob=new Blob([bytes],{type:'application/pdf'});
+  const url=URL.createObjectURL(blob);
+  const download=document.getElementById('download');
+  download.style.display='inline-block';
+  download.onclick=()=>{let a=document.createElement('a'); a.href=url; a.download='rotated.pdf'; a.click();};
 }
 
 function getSelectedBoxes(){
-    return [...document.querySelectorAll('.page-card.selected')];
+  return [...document.querySelectorAll('.page-card.selected')];
 }
 </script>
 </body>
