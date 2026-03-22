@@ -10,7 +10,7 @@ body,html{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#f0f2f
 .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
 .upload{padding:12px 20px;border:3px dashed #9333ea;border-radius:15px;color:#9333ea;cursor:pointer;text-align:center;margin-top:5px;font-weight:600;}
 #pdf-pages{display:flex;flex-wrap:wrap;gap:15px;margin-top:20px;}
-.page-card{position:relative;width:200px;height:280px;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;justify-content:center;align-items:center;overflow:hidden;cursor:pointer;}
+.page-card{position:relative;width:200px;height:280px;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;justify-content:center;align-items:center;overflow:hidden;cursor:pointer;transition:transform 0.2s;}
 .page-card.selected{border:2px solid #9333ea;}
 .page-card canvas{width:90%;height:auto;}
 .page-num{position:absolute;bottom:4px;right:6px;font-size:0.75rem;color:#475569;background:rgba(255,255,255,0.7);padding:2px 5px;border-radius:4px;}
@@ -27,11 +27,16 @@ body,html{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#f0f2f
 <div class="container">
 <div class="header">
 <h2>🔄 Rotate PDF</h2>
-<div class="ad">Ad Placeholder</div>
+    <p class="instruction">
+How to use: First, upload your PDF file, then select the pages you want to rotate. Choose a rotation angle from the dropdown or use the quick buttons. Click the "Rotate" button to rotate the selected pages. After rotation, download your PDF using the "Download" button.
+    </p>
+<div class="ad">Top Ad Placeholder</div>
 </div>
 
 <div class="upload" onclick="fileInput.click()">📁 Upload PDF</div>
 <input type="file" id="fileInput" hidden accept="application/pdf">
+
+<div class="ad">Middle Ad Placeholder</div>
 
 <div id="pdf-pages"></div>
 
@@ -40,6 +45,7 @@ body,html{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#f0f2f
 <button onclick="rotateSelected(90)">90°</button>
 <button onclick="rotateSelected(180)">180°</button>
 <button onclick="rotateSelected(270)">270°</button>
+<button onclick="rotateAll(90)">All Pages 90°</button>
 </div>
 
 <div>
@@ -53,9 +59,6 @@ body,html{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#f0f2f
 <button class="button" id="download" style="display:none;">📥 Download</button>
 </div>
 
-<p class="instruction">
-কিভাবে ব্যবহার করবেন: প্রথমে PDF আপলোড করুন, তারপর page select করুন, rotation angle বাছাই করুন, শেষ পর্যন্ত Rotate বোতামে ক্লিক করুন। Rotate হওয়া PDF download করুন।
-</p>
 
 <div class="bottom-buttons">
 <a href="#">📂 All PDF Tools</a>
@@ -106,23 +109,27 @@ fileInput.onchange = async e=>{
 };
 
 async function rotateSelected(angle){
+    await rotatePages(getSelectedBoxes(), angle);
+}
+async function rotateAll(angle){
+    const allBoxes=[...document.querySelectorAll('.page-card')];
+    await rotatePages(allBoxes, angle);
+}
+
+async function rotatePages(boxes, angle){
     if(!pdfDoc){alert('Upload PDF first'); return;}
+    if(boxes.length===0){alert('Select at least one page!'); return;}
     const file=fileInput.files[0];
     const buf=await file.arrayBuffer();
     const pdf=await PDFLib.PDFDocument.load(buf);
 
-    let selectedBoxes=[...document.querySelectorAll('.page-card.selected')];
-    if(selectedBoxes.length===0){
-        alert('Select at least one page!');
-        return;
-    }
-
     const chosenAngle = angle || parseInt(document.getElementById('rotateAngle').value);
 
-    for(let box of selectedBoxes){
+    for(let box of boxes){
         const pageIndex=parseInt(box.dataset.page);
         rotationMap[pageIndex]=(rotationMap[pageIndex]+chosenAngle)%360;
         pdf.getPages()[pageIndex].setRotation(PDFLib.degrees(rotationMap[pageIndex]));
+        box.style.transform=`rotate(${rotationMap[pageIndex]}deg)`;
     }
 
     const bytes=await pdf.save();
@@ -131,6 +138,10 @@ async function rotateSelected(angle){
     const download=document.getElementById('download');
     download.style.display='inline-block';
     download.onclick=()=>{let a=document.createElement('a'); a.href=url; a.download='rotated.pdf'; a.click();};
+}
+
+function getSelectedBoxes(){
+    return [...document.querySelectorAll('.page-card.selected')];
 }
 </script>
 </body>
