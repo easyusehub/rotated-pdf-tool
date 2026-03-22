@@ -19,15 +19,19 @@ body,html{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#f0f2f
 .bottom-buttons a{padding:10px 16px;background:#1e293b;color:#fff;border-radius:8px;text-decoration:none;}
 .quick-buttons{margin:10px 0;}
 .quick-buttons button{margin-right:5px;}
+.instruction{margin-top:15px;color:#475569;font-size:0.9rem;}
+.ad{margin:15px 0;border:2px dashed #ccc;padding:12px;border-radius:10px;color:#999;text-align:center;}
 </style>
 </head>
 <body>
 <div class="container">
 <div class="header">
 <h2>🔄 Rotate PDF</h2>
+<div class="ad">Ad Placeholder</div>
+</div>
+
 <div class="upload" onclick="fileInput.click()">📁 Upload PDF</div>
 <input type="file" id="fileInput" hidden accept="application/pdf">
-</div>
 
 <div id="pdf-pages"></div>
 
@@ -49,6 +53,10 @@ body,html{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#f0f2f
 <button class="button" id="download" style="display:none;">📥 Download</button>
 </div>
 
+<p class="instruction">
+কিভাবে ব্যবহার করবেন: প্রথমে PDF আপলোড করুন, তারপর page select করুন, rotation angle বাছাই করুন, শেষ পর্যন্ত Rotate বোতামে ক্লিক করুন। Rotate হওয়া PDF download করুন।
+</p>
+
 <div class="bottom-buttons">
 <a href="#">📂 All PDF Tools</a>
 <a href="#">🏠 Home</a>
@@ -62,7 +70,7 @@ body,html{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#f0f2f
 let pdfDoc=null;
 let fileInput=document.getElementById('fileInput');
 let pdfPagesContainer=document.getElementById('pdf-pages');
-let rotationMap={}; // per page rotation
+let rotationMap={};
 
 fileInput.onchange = async e=>{
     const file=e.target.files[0];
