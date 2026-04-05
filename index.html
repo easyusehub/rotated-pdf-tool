@@ -3,105 +3,173 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rotate PDF | EasyUseHub</title>
-<style>
-body,html{margin:0;padding:0;font-family:'Segoe UI',sans-serif;background:#f0f2f5;display:flex;justify-content:center;}
-.container{width:95%;max-width:1100px;padding:20px;background:#fff;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.1);}
-.header{display:flex;justify-content:flex-start;align-items:center;margin-bottom:10px;}
-.upload{padding:12px 20px;border:3px dashed #9333ea;border-radius:15px;color:#9333ea;cursor:pointer;text-align:center;margin-top:5px;font-weight:600;}
-#pdf-pages{display:flex;flex-wrap:wrap;gap:15px;margin-top:20px;}
-.page-card{position:relative;width:200px;height:280px;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;justify-content:center;align-items:center;overflow:hidden;cursor:pointer;transition:transform 0.2s;}
-.page-card.selected{border:2px solid #9333ea;}
-.page-card canvas{width:90%;height:auto;}
-.page-num{position:absolute;bottom:4px;right:6px;font-size:0.75rem;color:#475569;background:rgba(255,255,255,0.7);padding:2px 5px;border-radius:4px;}
-.button{padding:10px 18px;margin:10px 5px;border:none;border-radius:10px;background:#9333ea;color:#fff;cursor:pointer;font-weight:600;}
-.bottom-buttons{margin-top:20px;display:flex;gap:10px;}
-.bottom-buttons a{padding:10px 16px;background:#1e293b;color:#fff;border-radius:8px;text-decoration:none;}
-.quick-buttons{margin:10px 0;}
-.quick-buttons button{margin-right:5px;}
-.instruction{margin-top:10px;color:#475569;font-size:0.9rem;}
-.ad{margin:15px 0;border:2px dashed #ccc;padding:12px;border-radius:10px;color:#999;text-align:center;}
-</style>
-</head>
-<body>
-<div class="container">
-
-  <!-- Header only title -->
-  <div class="header">
-    <h2>🔄 Rotate PDF</h2>
-  </div>
-
-  <!-- Top Ad above Upload -->
-  <div class="ad">Top Ad Placeholder</div>
-
-  <!-- Instruction -->
-  <p class="instruction">
-    How to use: First, upload your PDF file, then select the pages you want to rotate. Choose a rotation angle from the dropdown or use the quick buttons. Click the "Rotate" button to rotate the selected pages. After rotation, download your PDF using the "Download" button.
-  </p>
-
-  <!-- Upload PDF -->
-  <div class="upload" onclick="fileInput.click()">📁 Upload PDF</div>
-  <input type="file" id="fileInput" hidden accept="application/pdf">
-
-  <!-- Middle Ad -->
-  <div class="ad">Middle Ad Placeholder</div>
-
-  <!-- PDF Page Thumbnails -->
-  <div id="pdf-pages"></div>
-
-  <!-- Quick Rotate Buttons -->
-  <div class="quick-buttons">
-    <label>Quick Rotate:</label>
-    <button onclick="rotateSelected(90)">90°</button>
-    <button onclick="rotateSelected(180)">180°</button>
-    <button onclick="rotateSelected(270)">270°</button>
-    <button onclick="rotateAll(90)">All Pages 90°</button>
-  </div>
-
-  <!-- Dropdown + Rotate Selected + Download -->
-  <div>
-    <label>Select rotation angle:</label>
-    <select id="rotateAngle">
-      <option value="90">90°</option>
-      <option value="180">180°</option>
-      <option value="270">270°</option>
-    </select>
-    <button class="button" onclick="rotateSelected()">Rotate Selected</button>
-    <button class="button" id="download" style="display:none;">📥 Download</button>
-  </div>
-
-  <!-- Bottom Buttons -->
-  <div class="bottom-buttons">
-    <a href="https://easyusehub.blogspot.com/p/free-pdf-tools-online.html">📂 All PDF Tools</a>
-    <a href="https://easyusehub.blogspot.com/?m=1">🏠 Home</a>
-  </div>
-
-</div>
-
-<!-- PDF.js + PDF-lib -->
+<title>🔄 Rotate PDF | EasyUseHub</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 
+<style>
+:root { --primary: #9333ea; --bg: #f5f7fa; }
+body, html{ margin:0; padding:0; font-family:Arial, sans-serif; background:var(--bg); text-align:center; position: relative; overflow-x: hidden;}
+
+/* --- Compact Ad Bridges --- */
+.custom-ad-bridge {
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    color: white; padding: 15px; margin: 15px auto; border-radius: 10px; cursor: pointer;
+    width: 90%; max-width: 600px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.2s;
+}
+.custom-ad-bridge:hover { transform: scale(1.01); }
+.ad-title { font-size: 16px; font-weight: bold; margin-bottom: 5px; display: block; }
+.custom-ad-bridge p { font-size: 13px; margin: 5px 0; opacity: 0.9; line-height: 1.4; }
+.ad-btn { background: #fbbf24; color: #000; padding: 6px 15px; border-radius: 4px; font-weight: bold; text-transform: uppercase; display: inline-block; font-size: 11px; margin-top: 5px; }
+
+/* --- Compact Push Notification (Right-side X) --- */
+#push-notification {
+    position: fixed; bottom: -180px; right: 20px; width: 280px; background: #fff; border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; padding: 12px;
+    z-index: 10000; transition: bottom 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); cursor: pointer; border-left: 5px solid #2563eb; text-align: left;
+}
+#push-notification.active { bottom: 20px; }
+#push-notification img { width: 45px; height: 45px; border-radius: 8px; margin-right: 12px; }
+.push-text b { font-size: 13px; color: #222; display: block; }
+.push-text p { font-size: 11px; color: #666; margin: 2px 0 0 0; }
+.close-push { 
+    position: absolute; top: 5px; right: 8px; width: 22px; height: 22px;
+    background: #f1f5f9; color: #64748b; border-radius: 50%; text-align: center;
+    line-height: 20px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; border: 1px solid #e2e8f0;
+}
+
+h1{text-align:center; margin:20px; color: #333; font-size: 24px;}
+#instructions{ width:90%; max-width:600px; margin:10px auto; text-align:center; font-size:13px; color:#666; }
+
+/* --- Tool Components --- */
+#upload-box{
+  border:2px dashed var(--primary); border-radius:12px; padding:30px 20px; text-align:center;
+  width:85%; max-width:450px; cursor:pointer; margin:20px auto; background: #fff; transition: 0.3s;
+}
+#upload-box:hover{ background: #f5e6fa; }
+
+#pdf-pages { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 20px; max-width: 1100px; margin: auto; }
+.page-card { 
+    background: #fff; border: 2px solid #ddd; border-radius: 10px; padding: 10px; cursor: pointer; 
+    transition: 0.3s; position: relative; width: 160px; height: 220px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.page-card.selected { border-color: var(--primary); background: #f5e6fa; box-shadow: 0 4px 12px rgba(147, 51, 234, 0.2); }
+.page-card canvas { max-width: 90%; max-height: 90%; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.page-num { position: absolute; bottom: 5px; right: 8px; font-size: 11px; font-weight: bold; color: #666; background: rgba(255,255,255,0.8); padding: 2px 5px; border-radius: 4px; z-index: 5; }
+
+.controls { margin: 20px auto; width: 90%; max-width: 700px; display: none; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.button, .quick-btn{ padding:10px 18px; margin:5px; border:none; border-radius:8px; background:var(--primary); color:#fff; cursor:pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
+.quick-btn { background: #4b5563; }
+select { padding: 9px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; outline: none; }
+
+.bottom-buttons{ margin: 20px 0 40px 0; }
+.bottom-link { padding:10px 22px; margin:5px; border-radius:8px; text-decoration:none; color:#fff; font-weight: bold; font-size: 13px; display: inline-block; }
+
+#toast{ position:fixed; top:20px; left:50%; transform:translateX(-50%); background:var(--primary); color:#fff; padding:12px 25px; border-radius:8px; display:none; z-index:99999; font-size: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+</style>
+</head>
+<body>
+
+<div id="push-notification" onclick="window.open('https://easyusehub.blogspot.com', '_blank')">
+    <span class="close-push" onclick="event.stopPropagation(); document.getElementById('push-notification').classList.remove('active');">&times;</span>
+    <img src="https://cdn-icons-png.flaticon.com/512/5968/5968313.png" alt="icon">
+    <div class="push-text">
+        <b>🚀 46+ Pro Tools Ready!</b>
+        <p>PDF Tools, Calculators & more - 100% Free.</p>
+    </div>
+</div>
+
+<h1>🔄 Rotate PDF Pages</h1>
+
+<div class="custom-ad-bridge" onclick="window.open('https://easyusehub.blogspot.com', '_blank')">
+    <span class="ad-title">🚀 Try 46+ Premium Free Web Tools!</span>
+    <p>PDF Tools, 16+ Calculators, Age & BMI Tracker - 100% Free</p>
+    <div class="ad-btn">Open EasyUseHub</div>
+</div>
+
+<div id="instructions">
+  ✨ Select pages, rotate them to any angle, and download. (Limit: 25MB)
+</div>
+
+<div id="upload-box">📁 Click to Upload PDF (Max 25MB)</div>
+<input type="file" id="fileInput" accept="application/pdf" hidden>
+
+<div id="pdf-pages"></div>
+
+<div class="controls" id="controls">
+    <div style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+        <button class="quick-btn" onclick="rotateSelected(90)">Rotate 90°</button>
+        <button class="quick-btn" onclick="rotateSelected(180)">Rotate 180°</button>
+        <button class="quick-btn" onclick="rotateAll(90)">All Pages 90°</button>
+    </div>
+    
+    <label style="font-size: 14px; color: #444; font-weight: bold;">Custom Angle:</label>
+    <select id="rotateAngle">
+      <option value="90">90° Clockwise</option>
+      <option value="180">180° Flip</option>
+      <option value="270">90° Counter-Clockwise</option>
+    </select>
+    <button class="button" onclick="rotateSelected()">Apply to Selected</button>
+    <button class="button" id="download" style="background:#10b981; display:none;">📥 Download PDF</button>
+</div>
+
+<div class="custom-ad-bridge" style="background: linear-gradient(135deg, #059669, #10b981);" onclick="window.open('https://easyusehub.blogspot.com/p/image-compressor.html', '_blank')">
+    <span class="ad-title">⚡ High-Speed Image Compressor</span>
+    <p>Optimize images without losing quality at EasyUseHub</p>
+    <div class="ad-btn" style="background: #fff; color: #059669;">Try Now</div>
+</div>
+
+<div class="custom-ad-bridge" style="background: linear-gradient(135deg, #f59e0b, #d97706);" onclick="window.open('https://easyusehub.blogspot.com/p/ultimate-calculators-hub.html', '_blank')">
+    <span class="ad-title">🔢 Smart Online Calculators</span>
+    <p>Loan EMI, Age & BMI Calculators - 100% Free.</p>
+    <div class="ad-btn" style="background: #000; color: #fff;">Open Calculators</div>
+</div>
+
+<div class="bottom-buttons">
+    <a href="https://easyusehub.blogspot.com/p/free-pdf-tools-online.html" class="bottom-link" style="background:#10b981;">📂 All PDF Tools</a>
+    <a href="https://easyusehub.blogspot.com/" class="bottom-link" style="background:#f59e0b;">🏠 Home</a>
+</div>
+
+<div id="toast">✅ PDF Rotated & Downloaded!</div>
+
 <script>
-let pdfDoc=null;
-let fileInput=document.getElementById('fileInput');
-let pdfPagesContainer=document.getElementById('pdf-pages');
+let pdfDoc=null; 
+let pdfBytes = null;
+let currentDownloadUrl = null;
+const fileInput=document.getElementById('fileInput');
+const pdfPagesContainer=document.getElementById('pdf-pages');
+const controls = document.getElementById('controls');
+const downloadBtn = document.getElementById('download');
+const pushAd = document.getElementById('push-notification');
 let rotationMap={};
+
+uploadBox = document.getElementById('upload-box');
+uploadBox.onclick = () => fileInput.click();
 
 fileInput.onchange = async e=>{
   const file=e.target.files[0];
   if(!file) return;
-  const buf=await file.arrayBuffer();
-  pdfDoc=await pdfjsLib.getDocument({data:buf}).promise;
-  pdfPagesContainer.innerHTML='';
-  rotationMap={};
+  
+  // Memory Cleanup before new upload
+  clearMemory();
+
+  // 25MB Limit Check
+  if(file.size > 25 * 1024 * 1024) {
+      alert("❌ Limit Exceeded: Please upload a file under 25MB.");
+      fileInput.value = ""; return;
+  }
+
+  pdfBytes = await file.arrayBuffer();
+  pdfDoc=await pdfjsLib.getDocument({data:pdfBytes}).promise;
+  
+  uploadBox.style.display = 'none';
+  controls.style.display = 'block';
 
   for(let i=0;i<pdfDoc.numPages;i++){
     const page=await pdfDoc.getPage(i+1);
-    const viewport=page.getViewport({scale:0.25});
+    const viewport=page.getViewport({scale:0.4});
     const canvas=document.createElement('canvas');
-    canvas.width=viewport.width;
-    canvas.height=viewport.height;
+    canvas.width=viewport.width; canvas.height=viewport.height;
     await page.render({canvasContext:canvas.getContext('2d'), viewport}).promise;
 
     const box=document.createElement('div');
@@ -111,49 +179,65 @@ fileInput.onchange = async e=>{
 
     const num=document.createElement('div');
     num.className='page-num';
-    num.textContent=i+1;
+    num.textContent = (i+1);
 
     box.appendChild(canvas);
     box.appendChild(num);
     box.onclick=()=>{box.classList.toggle('selected');};
-
     pdfPagesContainer.appendChild(box);
   }
+  setTimeout(() => { pushAd.classList.add('active'); }, 1500);
 };
 
-async function rotateSelected(angle){
-  await rotatePages(getSelectedBoxes(), angle);
+function clearMemory() {
+    if (currentDownloadUrl) URL.revokeObjectURL(currentDownloadUrl);
+    pdfPagesContainer.innerHTML='';
+    rotationMap={};
+    pdfDoc = null;
+    pdfBytes = null;
 }
+
+async function rotateSelected(angle){
+  const boxes = [...document.querySelectorAll('.page-card.selected')];
+  if(boxes.length===0){alert('Select at least one page!'); return;}
+  await rotatePages(boxes, angle);
+}
+
 async function rotateAll(angle){
   const allBoxes=[...document.querySelectorAll('.page-card')];
   await rotatePages(allBoxes, angle);
 }
 
 async function rotatePages(boxes, angle){
-  if(!pdfDoc){alert('Upload PDF first'); return;}
-  if(boxes.length===0){alert('Select at least one page!'); return;}
-  const file=fileInput.files[0];
-  const buf=await file.arrayBuffer();
-  const pdf=await PDFLib.PDFDocument.load(buf);
-
   const chosenAngle = angle || parseInt(document.getElementById('rotateAngle').value);
+  const pdf = await PDFLib.PDFDocument.load(pdfBytes);
 
   for(let box of boxes){
     const pageIndex=parseInt(box.dataset.page);
     rotationMap[pageIndex]=(rotationMap[pageIndex]+chosenAngle)%360;
     pdf.getPages()[pageIndex].setRotation(PDFLib.degrees(rotationMap[pageIndex]));
-    box.style.transform=`rotate(${rotationMap[pageIndex]}deg)`;
+    
+    // Smooth Visual Rotation
+    const canvas = box.querySelector('canvas');
+    canvas.style.transform=`rotate(${rotationMap[pageIndex]}deg)`;
   }
 
   const bytes=await pdf.save();
   const blob=new Blob([bytes],{type:'application/pdf'});
-  const url=URL.createObjectURL(blob);
-  const download=document.getElementById('download');
-  download.style.display='inline-block';
-  download.onclick=()=>{let a=document.createElement('a'); a.href=url; a.download='rotated.pdf'; a.click();};
-}
-
-function getSelectedBoxes(){
-  return [...document.querySelectorAll('.page-card.selected')];
+  
+  if (currentDownloadUrl) URL.revokeObjectURL(currentDownloadUrl);
+  currentDownloadUrl = URL.createObjectURL(blob);
+  
+  downloadBtn.style.display='inline-block';
+  downloadBtn.onclick=()=>{
+      let a=document.createElement('a'); 
+      a.href=currentDownloadUrl; 
+      a.download=`Rotated_EasyUseHub_${Date.now()}.pdf`; 
+      a.click();
+      document.getElementById('toast').style.display='block';
+      setTimeout(()=> document.getElementById('toast').style.display='none', 3000);
+  };
 }
 </script>
+</body>
+</html>
