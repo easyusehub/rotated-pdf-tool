@@ -43,10 +43,10 @@ h1{text-align:center; margin:20px; color: #333; font-size: 24px;}
 
 /* --- Tool Components --- */
 #upload-box{
-  border:2px dashed var(--primary); border-radius:12px; padding:30px 20px; text-align:center;
+  border:2px dashed var(--primary); border-radius:12px; padding:40px 20px; text-align:center;
   width:85%; max-width:450px; cursor:pointer; margin:20px auto; background: #fff; transition: 0.3s;
 }
-#upload-box:hover{ background: #f5e6fa; }
+#upload-box:hover{ background: #f5e6fa; transform: scale(1.01); }
 
 #pdf-pages { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 20px; max-width: 1100px; margin: auto; }
 .page-card { 
@@ -57,9 +57,10 @@ h1{text-align:center; margin:20px; color: #333; font-size: 24px;}
 .page-card canvas { max-width: 90%; max-height: 90%; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
 .page-num { position: absolute; bottom: 5px; right: 8px; font-size: 11px; font-weight: bold; color: #666; background: rgba(255,255,255,0.8); padding: 2px 5px; border-radius: 4px; z-index: 5; }
 
-.controls { margin: 20px auto; width: 90%; max-width: 700px; display: none; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.controls { margin: 20px auto; width: 90%; max-width: 750px; display: none; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 .button, .quick-btn{ padding:10px 18px; margin:5px; border:none; border-radius:8px; background:var(--primary); color:#fff; cursor:pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
 .quick-btn { background: #4b5563; }
+.reset-btn { background: #ef4444 !important; }
 select { padding: 9px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; outline: none; }
 
 .bottom-buttons{ margin: 20px 0 40px 0; }
@@ -88,19 +89,20 @@ select { padding: 9px; border-radius: 6px; border: 1px solid #cbd5e1; font-size:
 </div>
 
 <div id="instructions">
-  ✨ Select pages, rotate them to any angle, and download. (Limit: 25MB)
+  ✨ Select pages, rotate them, and download. Upload a new file anytime. (Limit: 25MB)
 </div>
 
-<div id="upload-box">📁 Click to Upload PDF (Max 25MB)</div>
+<div id="upload-box" onclick="document.getElementById('fileInput').click()">📁 Click to Upload PDF (Max 25MB)</div>
 <input type="file" id="fileInput" accept="application/pdf" hidden>
 
 <div id="pdf-pages"></div>
 
 <div class="controls" id="controls">
-    <div style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+    <div style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px; display: flex; flex-wrap: wrap; justify-content: center;">
         <button class="quick-btn" onclick="rotateSelected(90)">Rotate 90°</button>
         <button class="quick-btn" onclick="rotateSelected(180)">Rotate 180°</button>
         <button class="quick-btn" onclick="rotateAll(90)">All Pages 90°</button>
+        <button class="quick-btn reset-btn" onclick="resetTool()">🔄 Upload New File</button>
     </div>
     
     <label style="font-size: 14px; color: #444; font-weight: bold;">Custom Angle:</label>
@@ -140,25 +142,21 @@ const fileInput=document.getElementById('fileInput');
 const pdfPagesContainer=document.getElementById('pdf-pages');
 const controls = document.getElementById('controls');
 const downloadBtn = document.getElementById('download');
+const uploadBox = document.getElementById('upload-box');
 const pushAd = document.getElementById('push-notification');
 let rotationMap={};
-
-uploadBox = document.getElementById('upload-box');
-uploadBox.onclick = () => fileInput.click();
 
 fileInput.onchange = async e=>{
   const file=e.target.files[0];
   if(!file) return;
   
-  // Memory Cleanup before new upload
-  clearMemory();
-
   // 25MB Limit Check
   if(file.size > 25 * 1024 * 1024) {
       alert("❌ Limit Exceeded: Please upload a file under 25MB.");
       fileInput.value = ""; return;
   }
 
+  clearMemory(); // Cleanup before processing
   pdfBytes = await file.arrayBuffer();
   pdfDoc=await pdfjsLib.getDocument({data:pdfBytes}).promise;
   
@@ -190,11 +188,22 @@ fileInput.onchange = async e=>{
 };
 
 function clearMemory() {
-    if (currentDownloadUrl) URL.revokeObjectURL(currentDownloadUrl);
+    if (currentDownloadUrl) {
+        URL.revokeObjectURL(currentDownloadUrl);
+        currentDownloadUrl = null;
+    }
     pdfPagesContainer.innerHTML='';
     rotationMap={};
     pdfDoc = null;
     pdfBytes = null;
+}
+
+function resetTool() {
+    clearMemory();
+    fileInput.value = "";
+    uploadBox.style.display = 'block';
+    controls.style.display = 'none';
+    downloadBtn.style.display = 'none';
 }
 
 async function rotateSelected(angle){
